@@ -94,13 +94,32 @@ const weatherFromLocationTool: Tool = {
 	],
 };
 
+/**
+ * Function to get the latitude and longitude for a given city.
+ * @param city The city to get the latitude and longitude for.
+ * @returns A promise that resolves to the latitude and longitude of the city.
+ */
 async function CityToLatLon(city: string) {
-	const output = await fetch(
-		`https://nominatim.openstreetmap.org/search?q=${city}&format=json`,
-	);
-	const json = await output.json();
-	return [json[0].lat, json[0].lon];
+    try {
+        // Fetch the latitude and longitude from the Nominatim API
+        const output = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${city}&format=json`,
+        );
+        const json = await output.json();
+        
+        // Check if the response contains the expected data
+        if (json && json.length > 0 && json[0].lat && json[0].lon) {
+            return [json[0].lat, json[0].lon]; // Return latitude and longitude as an array
+        } else {
+            console.log('Location data is not available in the response:', json);
+            return null; // Return null if the data is not available
+        }
+    } catch (error) {
+        console.error('Error fetching location data:', error);
+        return null; // Return null in case of an error
+    }
 }
+
 async function LatLonToCity(latitude: string, longitude: string) {
 	const output = await fetch(
 		`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
@@ -113,21 +132,33 @@ async function LatLonToCity(latitude: string, longitude: string) {
 
 async function WeatherFromLatLon(latitude: string, longitude: string) {
 	const output = await fetch(
-		`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=1`,
+		`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&temperature_unit=celsius&wind_speed_unit=kmh&forecast_days=1`,
 	);
 
 	const json = await output.json();
-  console.log(`${json.current.temperature_2m} degrees Farenheit`);
+  console.log(`${json.current.temperature_2m} degrees C`);
 }
 
+/**
+ * Function to get the weather for a location based on the location name.
+ * @param location The location to get the weather for.
+ */
 async function WeatherFromLocation(location: string) {
-  const latlon = await CityToLatLon(location);
-  await WeatherFromLatLon(latlon[0], latlon[1]);
+    // Get latitude and longitude for the location
+    const latlon = await CityToLatLon(location);
+
+    // Check if latlon is not null
+    if (latlon) {
+        // Fetch the weather using the latitude and longitude
+        await WeatherFromLatLon(latlon[0], latlon[1]);
+    } else {
+        console.log('Could not fetch weather data because location data is unavailable.');
+    }
 }
 
 async function WebSearch(query: string) {
 	const output = await fetch(
-		`http://localhost:3333/search?q=${query}&format=json`,
+		`http://localhost:8080/search?q=${query}&format=json`,
 	);
 	const json = await output.json();
 	console.log(`${json.results[0].title}\n${json.results[0].content}\n`);

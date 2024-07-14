@@ -3,7 +3,7 @@ import {toolsString, executeFunction} from "./tools";
 
 const promptandanswer = async (prompt: string) => {
 	const response = await ollama.generate({
-		model: "llama3",
+		model: "llama3:instruct",
 		system: systemPrompt,
 		prompt: prompt,
 		stream: false,
@@ -11,7 +11,7 @@ const promptandanswer = async (prompt: string) => {
 	});
 
 	console.log(`\n${prompt}\n`);
- // console.log(response.response.trim());
+  console.log(response.response.trim());
   const responseObject = JSON.parse(response.response.trim());
   executeFunction(responseObject.functionName, responseObject.parameters);
 };
@@ -22,4 +22,4 @@ await promptandanswer("What is the weather in London?");
 await promptandanswer("What is the weather at 41.881832, -87.640406?");
 await promptandanswer("who is the current ceo of tesla?");
 await promptandanswer("what is located at 41.881832, -87.640406?");
-
+await promptandanswer("What is the water temperature of Aiguebelette Lake?");
